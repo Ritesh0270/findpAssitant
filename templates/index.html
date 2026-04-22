@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FindPros AI Assistant</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    body { background: #202123; color: #ececf1; height: 100vh; overflow: hidden; transition: background 0.2s ease, color 0.2s ease; }
+    .app { display: flex; height: 100vh; }
+
+    .sidebar {
+      width: 280px;
+      background: #171717;
+      border-right: 1px solid #2d2d2f;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .brand {
+      padding: 14px;
+      background: #2a2b32;
+      border: 1px solid #3b3d49;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 16px;
+      transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+
+    .new-chat {
+      background: #10a37f;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 13px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .new-chat:hover { background: #0d8c6d; }
+
+    .side-title {
+      color: #a9a9b3;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .chat-search {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #3b3d49;
+      background: #2a2b32;
+      color: #ececf1;
+      outline: none;
+      font-size: 13px;
+    }
+
+    .chat-search::placeholder {
+      color: #9da0aa;
+    }
+
+    .history {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .history-item-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .history-item {
+      background: #212226;
+      border: 1px solid #2e2f36;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      color: #d7d7de;
+      cursor: pointer;
+      transition: 0.2s ease;
+      text-align: left;
+      width: 100%;
+    }
+
+    .history-item:hover { background: #2a2b32; }
+
+    .history-item.active {
+      background: #2f3138;
+      border-color: #10a37f;
+    }
+
+    .history-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #f3f3f7;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-preview {
+      font-size: 12px;
+      color: #a9a9b3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .history-action-btn {
+      background: #2f3138;
+      border: 1px solid #3b3d49;
+      color: #d7d7de;
+      border-radius: 8px;
+      padding: 5px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .history-action-btn:hover {
+      background: #3a3d46;
+    }
+
+    .empty-history {
+      font-size: 13px;
+      color: #9da0aa;
+      padding: 10px 4px;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      padding: 18px 24px;
+      border-bottom: 1px solid #2d2d2f;
+      font-size: 18px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+    }
+
+    .theme-toggle {
+      background: #2a2b32;
+      color: #ececf1;
+      border: 1px solid #40414f;
+      border-radius: 10px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: 0.2s ease;
+    }
+
+    .theme-toggle:hover {
+      background: #343541;
+    }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    .center-box {
+      max-width: 900px;
+      margin: 0 auto;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .welcome-box { text-align: center; }
+
+    .welcome-box h1 {
+      font-size: 34px;
+      margin-bottom: 12px;
+    }
+
+    .welcome-box p {
+      color: #b4b4be;
+      font-size: 16px;
+      margin-bottom: 28px;
+    }
+
+    .chat-area {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .message {
+      padding: 16px 18px;
+      border-radius: 14px;
+      line-height: 1.6;
+      font-size: 15px;
+      max-width: 85%;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .user {
+      align-self: flex-end;
+      background: #10a37f;
+      color: white;
+    }
+
+    .bot {
+      align-self: flex-start;
+      background: #2a2b32;
+      border: 1px solid #3b3d49;
+      color: #ececf1;
+      transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+
+    .typing-loader {
+      align-self: flex-start;
+      background: #2a2b32;
+      border: 1px solid #3b3d49;
+      color: #ececf1;
+      padding: 14px 16px;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      max-width: 120px;
+    }
+
+    .typing-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #bfc3cf;
+      animation: blink 1.2s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes blink {
+      0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
+      40% { opacity: 1; transform: translateY(-2px); }
+    }
+
+    .refs {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid #41424b;
+      font-size: 14px;
+      color: #c6c8d1;
+      line-height: 1.35;
+    }
+
+    .refs a {
+      color: #7fd4bd;
+      text-decoration: none;
+    }
+
+    .refs a:hover { text-decoration: underline; }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .chip {
+      background: #343541;
+      color: #ececf1;
+      border: 1px solid #4a4c59;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: 0.2s ease;
+    }
+
+    .chip:hover { background: #40414f; }
+
+    .ref-row {
+      margin-top: 4px;
+      padding: 0;
+      line-height: 1.2;
+    }
+
+    .input-wrap {
+      padding: 18px 24px 24px;
+      border-top: 1px solid #2d2d2f;
+      background: #202123;
+      position: relative;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .input-container {
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .input-box {
+      background: #2a2b32;
+      border: 1px solid #40414f;
+      border-radius: 24px;
+      padding: 12px 14px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+      transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .input-box input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: white;
+      font-size: 15px;
+      padding: 10px;
+    }
+
+    .send-btn {
+      border: none;
+      background: #10a37f;
+      color: white;
+      padding: 11px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .send-btn:hover { background: #0d8c6d; }
+    .send-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .quick-suggestions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+
+    .quick-suggestions::-webkit-scrollbar {
+      display: none;
+    }
+
+    .quick-chip {
+      background: #343541;
+      color: #ececf1;
+      border: 1px solid #4a4c59;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: 0.2s ease;
+    }
+
+    .quick-chip:hover {
+      background: #40414f;
+    }
+
+    .autocomplete-box {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 112px;
+      background: #2a2b32;
+      border: 1px solid #40414f;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+      display: none;
+      z-index: 50;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .autocomplete-item {
+      width: 100%;
+      text-align: left;
+      border: none;
+      background: transparent;
+      color: #ececf1;
+      padding: 8px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #3a3b44;
+      font-size: 13px;
+      transition: 0.2s ease;
+    }
+
+    .autocomplete-item:last-child {
+      border-bottom: none;
+    }
+
+    .autocomplete-item:hover {
+      background: #343541;
+    }
+
+    body.light-theme {
+      background: #f5f7fb;
+      color: #1f2937;
+    }
+
+    body.light-theme .sidebar {
+      background: #ffffff;
+      border-right-color: #d8dee8;
+    }
+
+    body.light-theme .brand,
+    body.light-theme .history-item,
+    body.light-theme .input-box,
+    body.light-theme .bot,
+    body.light-theme .theme-toggle,
+    body.light-theme .autocomplete-box,
+    body.light-theme .typing-loader {
+      background: #ffffff;
+      color: #1f2937;
+      border-color: #d8dee8;
+    }
+
+    body.light-theme .topbar,
+    body.light-theme .input-wrap {
+      background: #f5f7fb;
+      color: #1f2937;
+      border-color: #d8dee8;
+    }
+
+    body.light-theme .input-box input,
+    body.light-theme .autocomplete-item,
+    body.light-theme .history-title,
+    body.light-theme .history-preview,
+    body.light-theme .refs,
+    body.light-theme .refs a {
+      color: #1f2937;
+    }
+
+    body.light-theme .side-title,
+    body.light-theme .welcome-box p,
+    body.light-theme .empty-history {
+      color: #6b7280;
+    }
+
+    body.light-theme .chat-search {
+      background: #ffffff;
+      color: #1f2937;
+      border-color: #d8dee8;
+    }
+
+    body.light-theme .quick-chip {
+      background: #eef2f7;
+      color: #1f2937;
+      border-color: #d8dee8;
+    }
+
+    body.light-theme .history-item.active {
+      border-color: #10a37f;
+    }
+
+    body.light-theme .chip {
+      background: #eef2f7;
+      color: #1f2937;
+      border-color: #d8dee8;
+    }
+
+    body.light-theme .autocomplete-item:hover,
+    body.light-theme .history-item:hover,
+    body.light-theme .theme-toggle:hover,
+    body.light-theme .history-action-btn:hover,
+    body.light-theme .quick-chip:hover {
+      background: #f1f5f9;
+    }
+
+    body.light-theme .history-action-btn {
+      background: #ffffff;
+      border-color: #d8dee8;
+      color: #1f2937;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .welcome-box h1 { font-size: 28px; }
+      .message { max-width: 95%; }
+      .input-box { flex-direction: column; }
+      .send-btn { width: 100%; }
+      .autocomplete-box { bottom: 165px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">FindPros AI</div>
+      <button class="new-chat" onclick="createNewChat()">+ New Chat</button>
+      <input type="text" id="chatSearch" class="chat-search" placeholder="Search chats..." />
+
+      <div class="side-title">Recent Chats</div>
+      <div class="history" id="historyList"></div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <span>FindPros AI Assistant</span>
+        <button class="theme-toggle" onclick="toggleTheme()">Theme</button>
+      </div>
+
+      <div class="content" id="content">
+        <div class="center-box">
+          <div class="welcome-box" id="welcomeBox">
+            <h1>How can I help today?</h1>
+            <p>Ask about any home service or project.</p>
+          </div>
+
+          <div class="chat-area" id="chatArea"></div>
+        </div>
+      </div>
+
+      <div class="input-wrap">
+        <div class="input-container">
+          <div class="autocomplete-box" id="autocompleteBox"></div>
+
+          <div class="input-box">
+            <input type="text" id="messageInput" placeholder="Ask about a service..." autocomplete="off" />
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+          </div>
+
+          <div class="quick-suggestions" id="quickSuggestions"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const chatArea = document.getElementById("chatArea");
+    const welcomeBox = document.getElementById("welcomeBox");
+    const messageInput = document.getElementById("messageInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const historyList = document.getElementById("historyList");
+    const suggestionsBox = document.getElementById("suggestionsBox") || null;
+    const autocompleteBox = document.getElementById("autocompleteBox");
+    const quickSuggestions = document.getElementById("quickSuggestions");
+
+    const STORAGE_KEY = "findpros_recent_chats_v2";
+    const THEME_KEY = "findpros_theme";
+
+    let chats = [];
+    let currentChatId = null;
+    let chatSearchTerm = "";
+
+    const STATIC_SUGGESTIONS = [
+      "Bathroom Remodeling",
+      "Roof Repair",
+      "Kitchen Design",
+      "Floor Installation",
+      "Window Repair",
+      "TV Wall Mount",
+      "Kitchen Remodel",
+      "Bathroom Remodel",
+      "Smart Home System",
+      "Lawn Care",
+      "General Cleaning",
+      "Remodel",
+      "Repair",
+      "Roofing",
+      "Appliances",
+      "Painting",
+      "Plumbing",
+      "Concrete Foundation Install"
+    ];
+
+    function generateId() {
+      return "chat_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+    }
+
+    function loadChats() {
+      try {
+        chats = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        if (!Array.isArray(chats)) chats = [];
+        chats = chats.slice(0, 30);
+      } catch (e) {
+        chats = [];
+      }
+    }
+
+    function saveChats() {
+      if (chats.length > 30) {
+        chats = chats.slice(0, 30);
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(chats));
+    }
+
+    function getCurrentChat() {
+      return chats.find(chat => chat.id === currentChatId) || null;
+    }
+
+    function createChatObject() {
+      return {
+        id: generateId(),
+        title: "New Chat",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        messages: []
+      };
+    }
+
+    function createNewChat() {
+      const newChat = createChatObject();
+      chats.unshift(newChat);
+      currentChatId = newChat.id;
+      saveChats();
+      renderHistory();
+      renderCurrentChat();
+      renderSuggestions();
+      renderQuickSuggestions();
+      hideAutocomplete();
+      messageInput.value = "";
+      messageInput.focus();
+    }
+
+    function openChat(chatId) {
+      currentChatId = chatId;
+      renderHistory();
+      renderCurrentChat();
+      renderSuggestions();
+      renderQuickSuggestions();
+      hideAutocomplete();
+    }
+
+    function renameChat(chatId) {
+      const chat = chats.find(c => c.id === chatId);
+      if (!chat) return;
+
+      const newTitle = prompt("Enter new chat name:", chat.title || "New Chat");
+      if (!newTitle || !newTitle.trim()) return;
+
+      chat.title = newTitle.trim();
+      chat.updatedAt = Date.now();
+      saveChats();
+      renderHistory();
+    }
+
+    function deleteChat(chatId) {
+      const confirmed = confirm("Delete this chat?");
+      if (!confirmed) return;
+
+      chats = chats.filter(chat => chat.id !== chatId);
+
+      if (!chats.length) {
+        const newChat = createChatObject();
+        chats.unshift(newChat);
+        currentChatId = newChat.id;
+      } else if (currentChatId === chatId) {
+        currentChatId = chats[0].id;
+      }
+
+      saveChats();
+      renderHistory();
+      renderCurrentChat();
+      renderSuggestions();
+      renderQuickSuggestions();
+    }
+
+    function renderHistory() {
+      historyList.innerHTML = "";
+
+      const filteredChats = chats.filter(chat => {
+        const title = (chat.title || "").toLowerCase();
+        const preview = (chat.messages.find(msg => msg.role === "user")?.text || "").toLowerCase();
+
+        return title.includes(chatSearchTerm) || preview.includes(chatSearchTerm);
+      });
+
+      if (!chats.length) {
+        historyList.innerHTML = `<div class="empty-history">No recent chats yet.</div>`;
+        return;
+      }
+
+      if (!filteredChats.length) {
+        historyList.innerHTML = `<div class="empty-history">No matching chats found.</div>`;
+        return;
+      }
+
+      filteredChats.forEach(chat => {
+        const wrap = document.createElement("div");
+        wrap.className = "history-item-wrap";
+
+        const item = document.createElement("button");
+        item.className = "history-item" + (chat.id === currentChatId ? " active" : "");
+        item.onclick = () => openChat(chat.id);
+
+        const previewMessage = chat.messages.find(msg => msg.role === "user")?.text || "Start a new conversation";
+
+        item.innerHTML = `
+          <div class="history-title">${escapeHtml(chat.title || "New Chat")}</div>
+          <div class="history-preview">${escapeHtml(previewMessage)}</div>
+        `;
+
+        const actions = document.createElement("div");
+        actions.className = "history-actions";
+
+        const renameBtn = document.createElement("button");
+        renameBtn.className = "history-action-btn";
+        renameBtn.textContent = "Rename";
+        renameBtn.onclick = (e) => {
+          e.stopPropagation();
+          renameChat(chat.id);
+        };
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "history-action-btn";
+        deleteBtn.textContent = "Delete";
+        deleteBtn.onclick = (e) => {
+          e.stopPropagation();
+          deleteChat(chat.id);
+        };
+
+        actions.appendChild(renameBtn);
+        actions.appendChild(deleteBtn);
+
+        wrap.appendChild(item);
+        wrap.appendChild(actions);
+        historyList.appendChild(wrap);
+      });
+    }
+
+    function renderCurrentChat() {
+      const currentChat = getCurrentChat();
+      chatArea.innerHTML = "";
+
+      if (!currentChat || !currentChat.messages.length) {
+        chatArea.style.display = "none";
+        welcomeBox.style.display = "block";
+        return;
+      }
+
+      welcomeBox.style.display = "none";
+      chatArea.style.display = "flex";
+
+      currentChat.messages.forEach(msg => {
+        if (msg.role === "user") {
+          addUserMessage(msg.text, false);
+        } else {
+          addBotMessage(msg.data || { answer: msg.text || "No response." }, false);
+        }
+      });
+
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function getSuggestionsFromChats() {
+      return STATIC_SUGGESTIONS.slice(0, 6);
+    }
+
+    function renderSuggestions() {
+      if (!suggestionsBox) return;
+      suggestionsBox.innerHTML = "";
+    }
+
+    function renderQuickSuggestions() {
+      const suggestions = getSuggestionsFromChats().slice(0, 6);
+      quickSuggestions.innerHTML = "";
+
+      suggestions.forEach(text => {
+        const chip = document.createElement("button");
+        chip.className = "quick-chip";
+        chip.textContent = text;
+
+        chip.onclick = () => {
+          messageInput.value = text;
+          messageInput.focus();
+        };
+
+        quickSuggestions.appendChild(chip);
+      });
+    }
+
+    function getAutocompleteSuggestions(query) {
+      const q = query.trim().toLowerCase();
+      if (!q) return [];
+
+      const keywordSuggestions = [
+        "Repair",
+        "Remodel",
+        "Roof Repair",
+        "Kitchen Remodel",
+        "Kitchen Design",
+        "Bathroom Remodel",
+        "Bathroom Remodeling",
+        "Window Repair",
+        "TV Wall Mount",
+        "Smart Home System",
+        "Plumbing",
+        "Painting",
+        "Appliances",
+        "Lawn Care",
+        "General Cleaning",
+        "Concrete Foundation Install"
+      ];
+
+      const firstLetterMap = {
+        r: ["Repair", "Remodel", "Roof Repair"],
+        k: ["Kitchen Remodel", "Kitchen Design"],
+        b: ["Bathroom Remodel", "Bathroom Remodeling"],
+        p: ["Plumbing", "Painting"],
+        w: ["Window Repair"],
+        t: ["TV Wall Mount"],
+        s: ["Smart Home System"],
+        a: ["Appliances"],
+        c: ["Concrete Foundation Install", "General Cleaning"],
+        l: ["Lawn Care"]
+      };
+
+      const pool = [...keywordSuggestions, ...STATIC_SUGGESTIONS];
+      const uniquePool = [...new Set(pool.filter(Boolean))];
+
+      const scored = uniquePool.map(item => {
+        const text = item.toLowerCase();
+        const words = text.split(/\s+/);
+        let score = 0;
+
+        if (text.startsWith(q)) score += 100;
+        if (words.some(word => word.startsWith(q))) score += 70;
+        if (text.includes(q)) score += 40;
+
+        if (q.length === 1 && firstLetterMap[q]) {
+          const preferred = firstLetterMap[q];
+          if (preferred.includes(item)) score += 120;
+        }
+
+        return { item, score };
+      });
+
+      return scored
+        .filter(x => x.score > 0)
+        .sort((a, b) => b.score - a.score || a.item.localeCompare(b.item))
+        .map(x => x.item)
+        .slice(0, 3);
+    }
+
+    function showAutocompleteSuggestions(query) {
+      const suggestions = getAutocompleteSuggestions(query);
+      autocompleteBox.innerHTML = "";
+
+      if (!suggestions.length) {
+        hideAutocomplete();
+        return;
+      }
+
+      suggestions.forEach(text => {
+        const item = document.createElement("button");
+        item.className = "autocomplete-item";
+        item.textContent = text;
+        item.onclick = () => {
+          fillSuggestion(text);
+          hideAutocomplete();
+        };
+        autocompleteBox.appendChild(item);
+      });
+
+      autocompleteBox.style.display = "block";
+    }
+
+    function hideAutocomplete() {
+      autocompleteBox.style.display = "none";
+      autocompleteBox.innerHTML = "";
+    }
+
+    function showTypingLoader() {
+      removeTypingLoader();
+
+      const loader = document.createElement("div");
+      loader.className = "typing-loader";
+      loader.id = "typingLoader";
+      loader.innerHTML = `
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+      `;
+
+      chatArea.appendChild(loader);
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function removeTypingLoader() {
+      const oldLoader = document.getElementById("typingLoader");
+      if (oldLoader) oldLoader.remove();
+    }
+
+    function updateChatTitle(chat, query) {
+      if (!chat) return;
+      if (!chat.messages.length || chat.title === "New Chat") {
+        chat.title = query.length > 35 ? query.slice(0, 35) + "..." : query;
+      }
+    }
+
+    function moveChatToTop(chatId) {
+      const index = chats.findIndex(chat => chat.id === chatId);
+      if (index > 0) {
+        const [chat] = chats.splice(index, 1);
+        chats.unshift(chat);
+      }
+    }
+
+    function fillSuggestion(text) {
+      messageInput.value = text;
+      messageInput.focus();
+      hideAutocomplete();
+    }
+
+    function addUserMessage(text, save = true) {
+      const msg = document.createElement("div");
+      msg.className = "message user";
+      msg.textContent = text;
+      chatArea.appendChild(msg);
+      chatArea.scrollTop = chatArea.scrollHeight;
+
+      if (save) {
+        const chat = getCurrentChat();
+        if (!chat) return;
+        chat.messages.push({ role: "user", text });
+        chat.updatedAt = Date.now();
+        updateChatTitle(chat, text);
+        moveChatToTop(chat.id);
+        saveChats();
+        renderHistory();
+      }
+    }
+
+    function addBotMessage(data, save = true) {
+      const msg = document.createElement("div");
+      msg.className = "message bot";
+
+      const answer = document.createElement("div");
+      answer.textContent = data.answer || "No response received.";
+      msg.appendChild(answer);
+
+      if (data.recommendations && data.recommendations.length) {
+        const chips = document.createElement("div");
+        chips.className = "chips";
+
+        data.recommendations.forEach(item => {
+          const chip = document.createElement("button");
+          chip.className = "chip";
+
+          const label = document.createElement("span");
+          label.textContent = item.task || "Open Service";
+
+          chip.appendChild(label);
+
+          chip.onclick = () => {
+            if (item.url) {
+              window.open(item.url, "_blank");
+            }
+          };
+
+          chips.appendChild(chip);
+        });
+
+        msg.appendChild(chips);
+      }
+
+      if (data.references && data.references.length) {
+        const refs = document.createElement("div");
+        refs.className = "refs";
+
+        let html = "<strong>References:</strong>";
+
+        data.references.forEach(ref => {
+          html += `<div class="ref-row">${ref.ref}. <a href="${ref.url}" target="_blank">${escapeHtml(ref.task)}</a></div>`;
+        });
+
+        refs.innerHTML = html;
+        msg.appendChild(refs);
+      }
+
+      chatArea.appendChild(msg);
+      chatArea.scrollTop = chatArea.scrollHeight;
+
+      if (save) {
+        const chat = getCurrentChat();
+        if (!chat) return;
+        chat.messages.push({ role: "bot", data });
+        chat.updatedAt = Date.now();
+        moveChatToTop(chat.id);
+        saveChats();
+        renderHistory();
+        renderSuggestions();
+        renderQuickSuggestions();
+      }
+    }
+
+    function getCurrentChatHistory() {
+      const chat = getCurrentChat();
+      if (!chat || !chat.messages) return [];
+
+      return chat.messages.map(msg => ({
+        role: msg.role === "user" ? "user" : "assistant",
+        text: msg.role === "user"
+          ? (msg.text || "")
+          : (msg.data?.answer || "")
+      }));
+    }
+
+    async function sendMessage() {
+      const query = messageInput.value.trim();
+      if (!query) return;
+
+      hideAutocomplete();
+
+      if (!currentChatId || !getCurrentChat()) {
+        createNewChat();
+      }
+
+      welcomeBox.style.display = "none";
+      chatArea.style.display = "flex";
+
+      addUserMessage(query);
+      messageInput.value = "";
+      sendBtn.disabled = true;
+      sendBtn.textContent = "Sending...";
+      showTypingLoader();
+
+      try {
+        const response = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            query,
+            chat_history: getCurrentChatHistory()
+          })
+        });
+
+        const data = await response.json();
+        removeTypingLoader();
+        addBotMessage(data);
+      } catch (error) {
+        removeTypingLoader();
+        addBotMessage({
+          answer: "Backend connection failed. Please check your Flask server.",
+          references: [],
+          recommendations: []
+        });
+      } finally {
+        removeTypingLoader();
+        sendBtn.disabled = false;
+        sendBtn.textContent = "Send";
+      }
+    }
+
+    function escapeHtml(text) {
+      return String(text || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("light-theme");
+      const theme = document.body.classList.contains("light-theme") ? "light" : "dark";
+      localStorage.setItem(THEME_KEY, theme);
+    }
+
+    function loadTheme() {
+      const savedTheme = localStorage.getItem(THEME_KEY);
+      if (savedTheme === "light") {
+        document.body.classList.add("light-theme");
+      }
+    }
+
+    function initApp() {
+      loadTheme();
+      loadChats();
+
+      if (!chats.length) {
+        const newChat = createChatObject();
+        chats.unshift(newChat);
+        currentChatId = newChat.id;
+        saveChats();
+      } else {
+        currentChatId = chats[0].id;
+      }
+
+      renderHistory();
+      renderCurrentChat();
+      renderSuggestions();
+      renderQuickSuggestions();
+    }
+
+    messageInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") sendMessage();
+    });
+
+    messageInput.addEventListener("input", function () {
+      const value = messageInput.value.trim();
+      if (!value) {
+        hideAutocomplete();
+        return;
+      }
+      showAutocompleteSuggestions(value);
+    });
+
+    messageInput.addEventListener("focus", function () {
+      const value = messageInput.value.trim();
+      if (value) {
+        showAutocompleteSuggestions(value);
+      }
+    });
+
+    document.addEventListener("click", function (e) {
+      const isInsideInput = e.target.closest(".input-container");
+      if (!isInsideInput) {
+        hideAutocomplete();
+      }
+    });
+
+    document.getElementById("chatSearch").addEventListener("input", function(e) {
+      chatSearchTerm = e.target.value.trim().toLowerCase();
+      renderHistory();
+    });
+
+    initApp();
+  </script>
+</body>
+</html>

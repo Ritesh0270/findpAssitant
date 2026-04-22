@@ -1,0 +1,6 @@
+.env
+myenv/
+__pycache__/
+*.pyc
+query_logs.json
+report.txt
