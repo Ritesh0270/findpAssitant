@@ -1,7 +1,139 @@
-import pymysql
 import json
-from dotenv import load_dotenv
 import os
+import re
+import html
+from urllib.parse import quote
+
+import pymysql
+from dotenv import load_dotenv
+
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+OUTPUT_FILE = os.path.join(BASE_DIR, "documents.json")
+
+GENERIC_CATEGORIES = {
+    "install",
+    "repair",
+    "replace",
+    "build",
+    "service",
+    "cleaning",
+    "clean",
+    "remodel",
+    "renovate",
+    "painting",
+    "flooring",
+    "delivery",
+    "offsite",
+    "fan",
+    "planner",
+    "raise",
+    "resurface",
+    "refinish",
+    "pumping",
+    "repair or service",
+    "install or replace",
+    "build or replace",
+    "remove and haul waste, junk, building materials and debris",
+}
+
+
+def normalize_space(text):
+    return " ".join(str(text or "").strip().split())
+
+
+def clean_text(text):
+    text = html.unescape(str(text or ""))
+    text = normalize_space(text)
+    return text
+
+
+def normalize_slug(slug):
+    slug = clean_text(slug).lower()
+    slug = slug.replace("_", "-")
+    slug = re.sub(r"-+", "-", slug)
+    return slug
+
+
+def slug_to_words(slug):
+    return normalize_slug(slug).replace("-", " ").strip()
+
+
+def looks_like_bad_slug(slug):
+    slug = normalize_slug(slug)
+
+    if not slug:
+        return True
+
+    if slug.isdigit():
+        return True
+
+    if len(slug) < 3:
+        return True
+
+    if not re.fullmatch(r"[a-z0-9-]+", slug):
+        return True
+
+    return False
+
+
+def similarity_score(a, b):
+    a_words = set(clean_text(a).lower().split())
+    b_words = set(clean_text(b).lower().split())
+
+    if not a_words or not b_words:
+        return 0.0
+
+    return len(a_words & b_words) / max(len(a_words), 1)
+
+
+def is_slug_task_mismatch(task, slug):
+    task_clean = clean_text(task).lower()
+    slug_words = slug_to_words(slug)
+
+    if slug_words in task_clean or task_clean in slug_words:
+        return False
+
+    score = similarity_score(task_clean, slug_words)
+
+    return score < 0.20
+
+
+def split_categories(categories):
+    raw_parts = [clean_text(x) for x in str(categories or "").split(",")]
+
+    parts = []
+    seen = set()
+
+    for part in raw_parts:
+        part_l = part.lower().strip(" .")
+
+        if not part_l:
+            continue
+
+        if part_l in GENERIC_CATEGORIES:
+            continue
+
+        if len(part_l) <= 2:
+            continue
+
+        if part_l in seen:
+            continue
+
+        seen.add(part_l)
+        parts.append(part.strip())
+
+    return parts
+
+
+def build_source(item_type, slug, item_id):
+    safe_slug = quote(normalize_slug(slug))
+
+    if item_type == "task":
+        return f"https://quotes.findpros.com/task.{safe_slug}.{item_id}.html?step=0"
+
+    return f"https://quotes.findpros.com/category.{safe_slug}.{item_id}.html?step=0"
+
 
 load_dotenv()
 
@@ -60,60 +192,75 @@ cursor.execute(category_query)
 category_data = cursor.fetchall()
 
 final_data = []
-seen = set()
+seen_ids = set()
+seen_keys = set()
 
-for row in task_data:
-    if not row["task"] or not row["slug"]:
-        continue
+skipped = {
+    "bad_slug": 0,
+    "mismatch": 0,
+    "duplicate": 0,
+    "empty": 0
+}
 
-    item_id = row["ID"]
-    task = row["task"].strip()
-    slug = row["slug"].strip()
-    categories = (row["categories"] or "").strip()
 
-    key = ("task", item_id)
-    if key in seen:
-        continue
-    seen.add(key)
+def add_rows(rows, item_type):
+    for row in rows:
+        item_id = row["ID"]
+        task = clean_text(row.get("task"))
+        slug = normalize_slug(row.get("slug"))
+        categories_raw = clean_text(row.get("categories"))
 
-    source = f"https://quotes.findpros.com/task.{slug}.{item_id}.html?step=0"
+        if not task or not slug:
+            skipped["empty"] += 1
+            continue
 
-    final_data.append({
-        "id": item_id,
-        "task": task,
-        "slug": slug,
-        "type": "task",
-        "categories": categories,
-        "source": source
-    })
+        if looks_like_bad_slug(slug):
+            skipped["bad_slug"] += 1
+            continue
 
-for row in category_data:
-    if not row["task"] or not row["slug"]:
-        continue
+        if item_type == "task" and is_slug_task_mismatch(task, slug):
+            skipped["mismatch"] += 1
+            continue
 
-    item_id = row["ID"]
-    task = row["task"].strip()
-    slug = row["slug"].strip()
-    categories = (row["categories"] or "").strip()
+        categories = ", ".join(split_categories(categories_raw))
 
-    key = ("category", item_id)
-    if key in seen:
-        continue
-    seen.add(key)
+        id_key = (item_type, item_id)
+        uniq_key = (item_type, slug, task.lower())
 
-    source = f"https://quotes.findpros.com/category.{slug}.{item_id}.html?step=0"
-    final_data.append({
-        "id": item_id,
-        "task": task,
-        "slug": slug,
-        "type": "category",
-        "categories": categories,
-        "source": source
-    })
+        if id_key in seen_ids or uniq_key in seen_keys:
+            skipped["duplicate"] += 1
+            continue
 
-with open("documents.json", "w", encoding="utf-8") as f:
+        seen_ids.add(id_key)
+        seen_keys.add(uniq_key)
+
+        final_data.append({
+            "id": item_id,
+            "task": task,
+            "slug": slug,
+            "type": item_type,
+            "categories": categories,
+            "source": build_source(item_type, slug, item_id)
+        })
+
+
+add_rows(task_data, "task")
+add_rows(category_data, "category")
+
+final_data.sort(key=lambda x: (x["type"], x["id"]))
+
+with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
     json.dump(final_data, f, indent=4, ensure_ascii=False)
 
+print("=" * 60)
 print(f"Data saved: {len(final_data)} records")
+print(f"Output file: {OUTPUT_FILE}")
+print("Skipped summary:")
+
+for key, value in skipped.items():
+    print(f" - {key}: {value}")
+
+print("=" * 60)
+
 cursor.close()
 conn.close()
