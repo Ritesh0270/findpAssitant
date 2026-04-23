@@ -81,6 +81,11 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
+      position: relative;
+    }
+
+    .history-item-wrap.menu-open {
+      margin-bottom: 110px;
     }
 
    .history-item {
@@ -153,8 +158,7 @@
     }
 
     .history-item:hover .history-menu-btn,
-    .history-item:focus-within .history-menu-btn,
-    .history-item.active .history-menu-btn {
+    .history-item:focus-within .history-menu-btn {
       opacity: 1;
     }
 
@@ -165,14 +169,14 @@
 
     .history-dropdown {
       position: absolute;
-      top: 30px;
+      top: calc(100% + 6px);
       right: 0;
       background: #202123;
       border: 1px solid #3b3d49;
       border-radius: 10px;
       min-width: 140px;
       display: none;
-      z-index: 99;
+      z-index: 999;
       overflow: hidden;
       box-shadow: 0 8px 20px rgba(0,0,0,0.25);
     }
@@ -847,6 +851,14 @@ body.light-theme .history-menu-btn {
     }
 
     function openChat(chatId) {
+      document.querySelectorAll(".history-dropdown").forEach(el => {
+        el.style.display = "none";
+      });
+
+      document.querySelectorAll(".history-item-wrap").forEach(el => {
+        el.classList.remove("menu-open");
+      });
+
       currentChatId = chatId;
       renderHistory();
       renderCurrentChat();
@@ -1032,17 +1044,26 @@ body.light-theme .history-menu-btn {
               if (el !== dropdown) el.style.display = "none";
             });
 
-            dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+            document.querySelectorAll(".history-item-wrap").forEach(el => {
+              if (el !== wrap) el.classList.remove("menu-open");
+            });
+
+            const isOpen = dropdown.style.display === "block";
+            dropdown.style.display = isOpen ? "none" : "block";
+            wrap.classList.toggle("menu-open", !isOpen);
           };
 
           renameBtn.onclick = (e) => {
             e.stopPropagation();
-            renameChat(chat.id);
             dropdown.style.display = "none";
+            wrap.classList.remove("menu-open");
+            renameChat(chat.id);
           };
 
           deleteBtn.onclick = (e) => {
             e.stopPropagation();
+            dropdown.style.display = "none";
+            wrap.classList.remove("menu-open");
             deleteChat(chat.id);
           };
 
@@ -1463,6 +1484,10 @@ body.light-theme .history-menu-btn {
       if (!e.target.closest(".history-menu-wrap")) {
         document.querySelectorAll(".history-dropdown").forEach(el => {
           el.style.display = "none";
+        });
+
+        document.querySelectorAll(".history-item-wrap").forEach(el => {
+          el.classList.remove("menu-open");
         });
       }
     });
