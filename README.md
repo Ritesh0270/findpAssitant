@@ -84,10 +84,10 @@ FindPros/
 ## Screenshots
 
 ### Homepage
-![Home](img/home.png)
+![home](img/home.png)
 
 ### Chat Interface
-![Chat](img/chat.png)
+![chat](img/chat.png)
 
 ### Search Results
-![Result](img/result.png)
+![result](img/result.png)
