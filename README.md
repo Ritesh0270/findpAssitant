@@ -63,3 +63,11 @@ findpAssitant/
 │   └── result.png
 │── templates/
 │   └── index.html
+
+---
+
+#snapshots
+
+![Homepage](img/home.png)
+![Chat](img/chat.png)
+![Result](img/result.png)
