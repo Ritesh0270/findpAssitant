@@ -65,12 +65,10 @@ findpAssitant/
 │   └── index.html
 
 
-#snapshots
 
+## snapshots
 
-![Chat](img/chat.png)
-![Homepage](img/home.png)
-![Result](img/result.png)
-
-
-
+```md
+![Demo1](img/home.png)
+![Demo2](img/chat.png)
+![Demo3](img/result.png)
