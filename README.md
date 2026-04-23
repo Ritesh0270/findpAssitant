@@ -83,11 +83,6 @@ FindPros/
 
 ## Screenshots
 
-### Homepage
-![home](img/home.png)
-
-### Chat Interface
-![chat](img/chat.png)
-
-### Search Results
-![result](img/result.png)
+![Demo1](img/home.png)
+![Demo2](img/chat.png)
+![Demo3](img/result.png)
