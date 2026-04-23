@@ -2,39 +2,26 @@
 
 FindPros AI Assistant is an AI-powered smart search and lead-generation assistant built for service marketplace websites. It helps users quickly find the right home improvement, repair, construction, remodeling, and maintenance services through natural language chat.
 
-Instead of manually browsing categories, users can simply type queries like:
+Users can type queries like:
 
 - I want roof repair
 - Need bathroom remodel
 - TV wall mount karwana hai
 - Window repair needed
 
-The system understands intent, searches service data intelligently, and returns the best matching task/service page.
+The system understands intent and returns the best matching service page.
 
 ---
 
 # Features
 
-## AI Smart Search
-Uses LLM + semantic search to understand user intent.
-
-## Natural Language Queries
-Users can search like chatting with ChatGPT.
-
-## Multi-language Support
-Supports English + Hindi mixed queries.
-
-## Fast Result Matching
-Uses FAISS vector search for instant service matching.
-
-## Smart Redirect
-Returns correct task/category URL pages.
-
-## Chat UI
-Modern ChatGPT-style interface built using HTML/CSS/JavaScript.
-
-## Query Logs
-Stores search logs for analytics and future improvements.
+- AI Smart Search
+- Natural Language Queries
+- Hindi + English Support
+- Fast FAISS Matching
+- Smart Redirect Links
+- ChatGPT Style UI
+- Query Logs
 
 ---
 
@@ -52,19 +39,15 @@ Stores search logs for analytics and future improvements.
 ## AI / Search
 - Llama 3.3 70B Versatile
 - Sentence Transformers
-- all-MiniLM-L6-v2 Embedding Model
-- FAISS Vector Search
-
-## Data
-- JSON Metadata
-- Task / Category Mapping
+- all-MiniLM-L6-v2
+- FAISS
 
 ---
 
 # Project Structure
 
 ```text
-FindPros/
+findpAssitant/
 │── app.py
 │── aichat.py
 │── fetch.py
@@ -73,21 +56,10 @@ FindPros/
 │── metadata.json
 │── task_index.faiss
 │── query_logs.json
+│── README.md
+│── img/
+│   ├── home.png
+│   ├── chat.png
+│   └── result.png
 │── templates/
 │   └── index.html
-│── static/
-│   ├── style.css
-│   └── script.js
-│── .env
-│── README.md
-
-## Screenshots
-
-### Homepage
-![home](img/home.png)
-
-### Chat Interface
-![chat](img/chat.png)
-
-### Search Results
-![result](img/result.png)
